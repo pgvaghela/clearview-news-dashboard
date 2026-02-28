@@ -1,0 +1,209 @@
+"""
+API routes for ClearView News Dashboard.
+
+Endpoints (Sprint 1):
+  GET /api/v1/stories              — paginated list of trending stories
+  GET /api/v1/stories/{story_id}   — story detail with articles grouped by lean
+
+Endpoints (Sprint 2 — stub only):
+  GET /api/v1/stories/{story_id}/factchecks
+"""
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy.orm import Session, joinedload
+
+from app.db.database import get_db
+from app.models.models import Article, Story, FactCheck
+from app.schemas.schemas import (
+    StoriesResponse,
+    StoryListItem,
+    StoryDetailResponse,
+    ArticleSchema,
+    FactChecksResponse,
+    FactCheckSchema,
+)
+from app.services.labeling import get_lean_info_for_outlet
+
+router = APIRouter()
+
+# ── Helpers ────────────────────────────────────────────────────────────────
+
+def _article_to_schema(article: Article) -> ArticleSchema:
+    lean_info = get_lean_info_for_outlet(article.outlet)
+    return ArticleSchema(
+        id=article.id,
+        title=article.title,
+        url=article.url,
+        description=article.description,
+        published_at=article.published_at,
+        outlet_name=article.outlet.name if article.outlet else article.outlet_name,
+        lean_display=lean_info["lean_display"],
+        why_label=lean_info["why_label"],
+        rating_provider="AllSides",
+        rating_method=lean_info.get("rating_method"),
+        confidence=lean_info.get("confidence"),
+    )
+
+
+def _lean_bucket(lean_display: str | None) -> str:
+    """Map a lean_display value to a bucket key."""
+    mapping = {
+        "Left": "left",
+        "Lean Left": "lean_left",
+        "Center": "center",
+        "Lean Right": "lean_right",
+        "Right": "right",
+    }
+    return mapping.get(lean_display or "", "center")
+
+
+# ── GET /stories ───────────────────────────────────────────────────────────
+
+@router.get("/stories", response_model=StoriesResponse, summary="List trending stories")
+def list_stories(
+    page: int = Query(1, ge=1, description="Page number"),
+    page_size: int = Query(15, ge=1, le=50, description="Stories per page"),
+    db: Session = Depends(get_db),
+):
+    """
+    Returns a paginated list of active stories ordered by last_updated_at desc.
+    Each story includes up to one preview article per lean category.
+    """
+    total = db.query(Story).filter(Story.is_active == True).count()
+
+    stories = (
+        db.query(Story)
+        .filter(Story.is_active == True)
+        .options(joinedload(Story.articles).joinedload(Article.outlet))
+        .order_by(Story.last_updated_at.desc())
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+        .all()
+    )
+
+    story_items = []
+    for story in stories:
+        # Build one preview article per lean bucket
+        seen_leans: set[str] = set()
+        preview_articles: list[ArticleSchema] = []
+        for article in sorted(
+            story.articles,
+            key=lambda a: a.published_at or a.fetched_at,
+            reverse=True,
+        ):
+            lean_info = get_lean_info_for_outlet(article.outlet)
+            bucket = _lean_bucket(lean_info["lean_display"])
+            if bucket not in seen_leans:
+                seen_leans.add(bucket)
+                preview_articles.append(_article_to_schema(article))
+            if len(seen_leans) >= 5:
+                break
+
+        story_items.append(
+            StoryListItem(
+                id=story.id,
+                headline=story.headline,
+                first_seen_at=story.first_seen_at,
+                last_updated_at=story.last_updated_at,
+                article_count=story.article_count,
+                lean_categories_present=story.lean_categories_present,
+                preview_articles=preview_articles,
+            )
+        )
+
+    return StoriesResponse(
+        total=total,
+        page=page,
+        page_size=page_size,
+        stories=story_items,
+    )
+
+
+# ── GET /stories/{story_id} ────────────────────────────────────────────────
+
+@router.get(
+    "/stories/{story_id}",
+    response_model=StoryDetailResponse,
+    summary="Story detail — articles grouped by lean",
+)
+def get_story(story_id: int, db: Session = Depends(get_db)):
+    """
+    Returns full story detail.
+    Articles are grouped into left / lean_left / center / lean_right / right buckets.
+    """
+    story = (
+        db.query(Story)
+        .options(joinedload(Story.articles).joinedload(Article.outlet))
+        .filter(Story.id == story_id)
+        .first()
+    )
+    if not story:
+        raise HTTPException(status_code=404, detail="Story not found")
+
+    buckets: dict[str, list[ArticleSchema]] = {
+        "left": [],
+        "lean_left": [],
+        "center": [],
+        "lean_right": [],
+        "right": [],
+    }
+
+    for article in sorted(
+        story.articles,
+        key=lambda a: a.published_at or a.fetched_at,
+        reverse=True,
+    ):
+        lean_info = get_lean_info_for_outlet(article.outlet)
+        bucket = _lean_bucket(lean_info["lean_display"])
+        if bucket in buckets:
+            buckets[bucket].append(_article_to_schema(article))
+
+    return StoryDetailResponse(
+        id=story.id,
+        headline=story.headline,
+        first_seen_at=story.first_seen_at,
+        last_updated_at=story.last_updated_at,
+        article_count=story.article_count,
+        lean_categories_present=story.lean_categories_present,
+        **buckets,
+    )
+
+
+# ── GET /stories/{story_id}/factchecks — Sprint 2 stub ────────────────────
+
+@router.get(
+    "/stories/{story_id}/factchecks",
+    response_model=FactChecksResponse,
+    summary="Fact-check panel for a story (Sprint 2)",
+)
+def get_fact_checks(story_id: int, db: Session = Depends(get_db)):
+    """
+    Sprint 2: returns cached fact-check claim reviews for a story,
+    or a clear 'No matching claim reviews found.' message.
+    Currently returns the stub response — full implementation in Sprint 2.
+    """
+    story = db.query(Story).filter(Story.id == story_id).first()
+    if not story:
+        raise HTTPException(status_code=404, detail="Story not found")
+
+    fact_checks = (
+        db.query(FactCheck)
+        .filter(FactCheck.story_id == story_id, FactCheck.no_match == False)
+        .order_by(FactCheck.review_date.desc())
+        .all()
+    )
+
+    if not fact_checks:
+        return FactChecksResponse(
+            story_id=story_id,
+            has_results=False,
+            message="No matching claim reviews found.",
+            fact_checks=[],
+        )
+
+    return FactChecksResponse(
+        story_id=story_id,
+        has_results=True,
+        message=f"{len(fact_checks)} claim review(s) found.",
+        fact_checks=[FactCheckSchema.model_validate(fc) for fc in fact_checks],
+    )
