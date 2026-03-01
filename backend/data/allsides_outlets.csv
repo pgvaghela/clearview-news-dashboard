@@ -1,0 +1,31 @@
+name,domain,lean
+BBC News,bbc.com,center
+Reuters,reuters.com,center
+Associated Press,apnews.com,center
+NPR,npr.org,lean_left
+The Guardian,theguardian.com,lean_left
+CNN,cnn.com,lean_left
+MSNBC,msnbc.com,left
+The New York Times,nytimes.com,lean_left
+The Washington Post,washingtonpost.com,lean_left
+ABC News,abcnews.go.com,lean_left
+CBS News,cbsnews.com,lean_left
+NBC News,nbcnews.com,lean_left
+Axios,axios.com,center
+The Hill,thehill.com,center
+USA Today,usatoday.com,center
+Wall Street Journal,wsj.com,lean_right
+Fox News,foxnews.com,right
+New York Post,nypost.com,lean_right
+Breitbart,breitbart.com,right
+The Federalist,thefederalist.com,right
+National Review,nationalreview.com,right
+The Blaze,theblaze.com,right
+Daily Wire,dailywire.com,right
+Newsweek,newsweek.com,center
+Time,time.com,lean_left
+The Atlantic,theatlantic.com,lean_left
+Vox,vox.com,left
+Mother Jones,motherjones.com,left
+HuffPost,huffpost.com,left
+Slate,slate.com,left
