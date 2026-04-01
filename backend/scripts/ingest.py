@@ -16,7 +16,7 @@ Usage:
 import sys
 import os
 import logging
-from datetime import datetime, timezone
+from datetime import datetime
 
 # Allow imports from backend/
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

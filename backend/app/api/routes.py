@@ -28,6 +28,7 @@ router = APIRouter()
 
 # ── Helpers ────────────────────────────────────────────────────────────────
 
+
 def _article_to_schema(article: Article) -> ArticleSchema:
     lean_info = get_lean_info_for_outlet(article.outlet)
     return ArticleSchema(
@@ -69,11 +70,11 @@ def list_stories(
     Returns a paginated list of active stories ordered by last_updated_at desc.
     Each story includes up to one preview article per lean category.
     """
-    total = db.query(Story).filter(Story.is_active == True).count()
+    total = db.query(Story).filter(Story.is_active).count()
 
     stories = (
         db.query(Story)
-        .filter(Story.is_active == True)
+        .filter(Story.is_active)
         .options(joinedload(Story.articles).joinedload(Article.outlet))
         .order_by(Story.last_updated_at.desc())
         .offset((page - 1) * page_size)
@@ -188,7 +189,7 @@ def get_fact_checks(story_id: int, db: Session = Depends(get_db)):
 
     fact_checks = (
         db.query(FactCheck)
-        .filter(FactCheck.story_id == story_id, FactCheck.no_match == False)
+        .filter(FactCheck.story_id == story_id, FactCheck.no_match.is_(False))
         .order_by(FactCheck.review_date.desc())
         .all()
     )

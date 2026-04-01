@@ -44,7 +44,7 @@ jobs:
         run: |
           cd backend
           pip install flake8
-          flake8 app/ scripts/ --max-line-length=100 --extend-ignore=E501
+          flake8 app/ scripts/ --max-line-length=100 --extend-ignore=E501,E402
 
       - name: Run backend tests
         env:
