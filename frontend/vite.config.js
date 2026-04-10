@@ -6,7 +6,8 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
+        // 127.0.0.1 avoids Node resolving localhost -> ::1 while uvicorn binds IPv4 (ECONNREFUSED).
+        target: 'http://127.0.0.1:8000',
         changeOrigin: true,
       },
     },
