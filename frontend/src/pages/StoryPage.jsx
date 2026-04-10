@@ -3,92 +3,8 @@ import { useApi } from '../hooks/useApi.js'
 import { fetchStory } from '../services/api.js'
 import LeanBadge from '../components/LeanBadge.jsx'
 import LeanTooltip from '../components/LeanTooltip.jsx'
+import FactCheckPanel from '../components/FactCheckPanel.jsx'
 import './StoryPage.css'
-
-// ── Mock data — used until API wiring is complete (Sprint 1) ──────────────
-const MOCK_STORY = {
-  id: 1,
-  headline: 'Senate passes major infrastructure bill after weeks of debate',
-  first_seen_at: new Date(Date.now() - 180 * 60000).toISOString(),
-  last_updated_at: new Date(Date.now() - 20 * 60000).toISOString(),
-  article_count: 6,
-  lean_categories_present: 'left,center,right',
-  left: [
-    {
-      id: 1,
-      title: 'Historic infrastructure bill delivers for working families',
-      url: 'https://npr.org/example',
-      description: 'The sweeping package includes funding for broadband, clean energy, and public transit.',
-      published_at: new Date(Date.now() - 90 * 60000).toISOString(),
-      outlet_name: 'NPR',
-      lean_display: 'Left',
-      why_label: 'NPR is rated Left by AllSides based on blind reader surveys conducted annually.',
-      rating_provider: 'AllSides',
-      rating_method: 'Blind surveys',
-      confidence: 'Community consensus',
-    },
-    {
-      id: 2,
-      title: 'Infrastructure vote marks major progressive victory',
-      url: 'https://huffpost.com/example',
-      description: 'Advocates celebrated the passage as a once-in-a-generation investment.',
-      published_at: new Date(Date.now() - 120 * 60000).toISOString(),
-      outlet_name: 'HuffPost',
-      lean_display: 'Left',
-      why_label: 'HuffPost is rated Left by AllSides based on blind reader surveys.',
-      rating_provider: 'AllSides',
-      rating_method: 'Blind surveys',
-      confidence: 'Community consensus',
-    },
-  ],
-  lean_left: [],
-  center: [
-    {
-      id: 3,
-      title: 'Senate approves $1.2 trillion infrastructure package',
-      url: 'https://reuters.com/example',
-      description: 'The bill passed 69-30 with bipartisan support, heading next to the House.',
-      published_at: new Date(Date.now() - 60 * 60000).toISOString(),
-      outlet_name: 'Reuters',
-      lean_display: 'Center',
-      why_label: 'Reuters is rated Center by AllSides based on multi-partisan editorial review and reader surveys.',
-      rating_provider: 'AllSides',
-      rating_method: 'Multi-partisan panel review + blind surveys',
-      confidence: 'Community consensus',
-    },
-    {
-      id: 4,
-      title: 'Infrastructure bill passes Senate in bipartisan vote',
-      url: 'https://apnews.com/example',
-      description: 'The Associated Press reported 19 Republicans joined all 50 Democrats.',
-      published_at: new Date(Date.now() - 75 * 60000).toISOString(),
-      outlet_name: 'Associated Press',
-      lean_display: 'Center',
-      why_label: 'AP is rated Center by AllSides.',
-      rating_provider: 'AllSides',
-      rating_method: 'Multi-partisan panel review + blind surveys',
-      confidence: 'Community consensus',
-    },
-  ],
-  lean_right: [],
-  right: [
-    {
-      id: 5,
-      title: 'Infrastructure bill a trojan horse for Green New Deal spending',
-      url: 'https://foxnews.com/example',
-      description: 'Critics say the $1.2 trillion price tag masks climate provisions buried in the text.',
-      published_at: new Date(Date.now() - 45 * 60000).toISOString(),
-      outlet_name: 'Fox News',
-      lean_display: 'Right',
-      why_label: 'Fox News is rated Right by AllSides based on blind reader surveys.',
-      rating_provider: 'AllSides',
-      rating_method: 'Blind surveys',
-      confidence: 'Community consensus',
-    },
-  ],
-}
-
-const USE_MOCK = true  // flip to false once API wiring is complete
 
 const LEAN_COLUMNS = [
   { key: 'left',       label: 'Left',       colorVar: 'var(--color-left)' },
@@ -134,7 +50,7 @@ export default function StoryPage() {
   const navigate = useNavigate()
 
   const { data: story, loading, error } = useApi(
-    () => USE_MOCK ? Promise.resolve(MOCK_STORY) : fetchStory(id),
+    () => fetchStory(id),
     [id]
   )
 
@@ -228,13 +144,7 @@ export default function StoryPage() {
               ))}
             </div>
 
-            {/* Fact-check panel — Sprint 2 placeholder */}
-            <section className="factcheck-panel factcheck-panel--placeholder">
-              <h2 className="factcheck-panel__title">Fact Checks</h2>
-              <p className="factcheck-panel__coming-soon">
-                Fact-check panel coming in Sprint 2 (04/03 – 04/17).
-              </p>
-            </section>
+            <FactCheckPanel storyId={story.id} />
           </>
         )}
       </main>

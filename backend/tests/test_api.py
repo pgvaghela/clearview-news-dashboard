@@ -1,5 +1,5 @@
 """
-Backend tests — Sprint 1 smoke suite (5 tests).
+Backend tests — Sprint 1 + Sprint 2 smoke suite.
 
 Covers:
   - GET /health
@@ -7,6 +7,7 @@ Covers:
   - GET /api/v1/stories/:id    (US-2: Story Page Comparison)
   - GET /api/v1/stories/:id    lean grouping (US-3: Lean Label)
   - GET /api/v1/stories/999    404 handling
+  - GET /api/v1/stories/:id/factchecks (with results / no_match)
 
 Uses an in-memory SQLite database so no Postgres is required to run tests.
 """
@@ -19,7 +20,7 @@ from sqlalchemy.orm import sessionmaker
 
 from app.main import app
 from app.db.database import Base, get_db
-from app.models.models import Outlet, Article, Story
+from app.models.models import Outlet, Article, Story, FactCheck
 
 # ── Test database (SQLite in-memory) ──────────────────────────────────────
 
@@ -192,3 +193,42 @@ def test_get_story_not_found(client):
     """
     resp = client.get("/api/v1/stories/999")
     assert resp.status_code == 404
+
+
+def test_factcheck_panel_with_results(client):
+    """GET /factchecks returns seeded fact-check rows when no_match=False."""
+    db = TestSessionLocal()
+    db.add(
+        FactCheck(
+            story_id=1,
+            claim_text="Infrastructure spending claim",
+            claim_reviewed="Senate passed infrastructure bill",
+            rating="Mostly True",
+            publisher="PolitiFact",
+            review_url="https://example.com/factcheck/1",
+            review_date=datetime(2026, 3, 15, 12, 0, 0),
+            no_match=False,
+        )
+    )
+    db.commit()
+    db.close()
+
+    resp = client.get("/api/v1/stories/1/factchecks")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["has_results"] is True
+    assert len(data["fact_checks"]) >= 1
+
+
+def test_factcheck_panel_no_match(client):
+    """GET /factchecks ignores no_match placeholder rows."""
+    db = TestSessionLocal()
+    db.add(FactCheck(story_id=1, no_match=True))
+    db.commit()
+    db.close()
+
+    resp = client.get("/api/v1/stories/1/factchecks")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["has_results"] is False
+    assert "No matching claim reviews found." in data["message"]

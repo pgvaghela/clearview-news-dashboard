@@ -10,22 +10,22 @@ with transparent bias labels and professional fact-check links.
 
 ---
 
-## Current Sprint Status (Sprint 1 — as of 03/20/2026)
+## Current Sprint Status (Sprint 2 — as of 03/31/2026)
 
 | Layer | Status |
 |---|---|
 | PostgreSQL schema (5 tables) | ✅ Done |
 | Article ingestion (8 outlets via NewsAPI) | ✅ Done (manual trigger; cron pending) |
-| TF-IDF story clustering | ✅ Done (~78% accuracy) |
-| AllSides lean labeling (127 outlets) | ✅ Done |
-| GET /stories endpoint | ✅ Done |
-| GET /story/:id endpoint | ✅ Done |
-| React dashboard UI | ✅ Done (mock data) |
-| React story page UI | ✅ Done (mock data) |
-| API ↔ Frontend wiring | 🔄 In Progress |
-| Automated tests | 🔄 In Progress (scaffolded) |
-| GET /story/:id/factchecks | ⏳ Sprint 2 |
-| Fact-check panel UI | ⏳ Sprint 2 |
+| TF-IDF + entity-overlap clustering | ✅ Done (~86% accuracy) |
+| AllSides lean labeling | ✅ Done |
+| GET /api/v1/stories & GET /api/v1/stories/:id | ✅ Done |
+| API ↔ Frontend wiring (dashboard + story page) | ✅ Done |
+| Google Fact Check Tools API + `fact_checks` cache | ✅ Done (`services/factchecks.py`) |
+| GET /api/v1/stories/:id/factchecks | ✅ Done |
+| Fact-check panel UI (`FactCheckPanel`) | ✅ Done |
+| Pipeline script `run_factchecks.py` | ✅ Done (cron after ingest + cluster) |
+| Backend tests (pytest) | ✅ Done (7 API tests) |
+| Frontend tests (Vitest) | ✅ Done (14 component tests) |
 
 ---
 
@@ -35,7 +35,8 @@ with transparent bias labels and professional fact-check links.
 - Python 3.11+
 - Node.js 20+
 - PostgreSQL 15+
-- A [NewsAPI](https://newsapi.org/) free API key
+- A [NewsAPI](https://newsapi.org/) API key (ingestion)
+- A [Google Fact Check Tools API](https://developers.google.com/fact-check/tools/api) key (`GOOGLE_FACTCHECK_API_KEY`) for fact-check lookup and population
 
 ### 1. Clone & configure environment
 
@@ -43,7 +44,7 @@ with transparent bias labels and professional fact-check links.
 git clone https://github.com/YOUR_USERNAME/clearview-news-dashboard.git
 cd clearview-news-dashboard
 cp backend/.env.example backend/.env
-# Edit backend/.env — add your NEWSAPI_KEY and DATABASE_URL
+# Edit backend/.env — set DATABASE_URL, NEWSAPI_KEY, GOOGLE_FACTCHECK_API_KEY
 ```
 
 ### 2. Backend
@@ -69,6 +70,9 @@ python scripts/ingest.py
 # Run clustering + labeling
 python scripts/cluster_and_label.py
 
+# Fetch and cache fact checks for stories (manual; add to cron after clustering)
+python scripts/run_factchecks.py
+
 # Start the API server
 uvicorn app.main:app --reload --port 8000
 ```
@@ -83,7 +87,7 @@ npm install
 npm run dev
 ```
 
-App: http://localhost:5173
+App: http://localhost:5173 — the Vite dev server proxies `/api` to `http://localhost:8000`, so run the backend at the same time for live data.
 
 ### 4. Run tests
 
@@ -105,7 +109,7 @@ clearview/
 │   ├── app/
 │   │   ├── main.py              # FastAPI app entry point
 │   │   ├── api/
-│   │   │   ├── routes.py        # All API routes
+│   │   │   └── routes.py        # All API routes
 │   │   ├── core/
 │   │   │   └── config.py        # Settings (env vars)
 │   │   ├── db/
@@ -116,11 +120,13 @@ clearview/
 │   │   ├── schemas/
 │   │   │   └── schemas.py       # Pydantic response schemas
 │   │   └── services/
-│   │       ├── clustering.py    # TF-IDF story clustering
-│   │       └── labeling.py      # AllSides lean labeling
+│   │       ├── clustering.py    # TF-IDF + entity overlap clustering
+│   │       ├── labeling.py      # AllSides lean labeling
+│   │       └── factchecks.py    # Google Fact Check API + DB cache
 │   ├── scripts/
 │   │   ├── ingest.py            # Article ingestion (NewsAPI + RSS)
-│   │   ├── cluster_and_label.py # Run clustering + labeling pipeline
+│   │   ├── cluster_and_label.py # Clustering + labeling pipeline
+│   │   ├── run_factchecks.py    # Fact-check fetch for active stories
 │   │   └── seed_outlets.py      # Load AllSides CSV into DB
 │   ├── tests/
 │   │   └── test_api.py          # API endpoint tests
@@ -134,16 +140,17 @@ clearview/
 │   │   ├── main.jsx
 │   │   ├── App.jsx
 │   │   ├── components/
-│   │   │   ├── StoryCard.jsx    # Dashboard story card
-│   │   │   ├── LeanBadge.jsx    # Left/Center/Right badge
-│   │   │   └── LeanTooltip.jsx  # "Why this label?" tooltip
+│   │   │   ├── StoryCard.jsx
+│   │   │   ├── LeanBadge.jsx
+│   │   │   ├── LeanTooltip.jsx
+│   │   │   └── FactCheckPanel.jsx
 │   │   ├── pages/
-│   │   │   ├── Dashboard.jsx    # Main trending stories page
-│   │   │   └── StoryPage.jsx    # Story detail + L/C/R columns
+│   │   │   ├── Dashboard.jsx
+│   │   │   └── StoryPage.jsx
 │   │   ├── hooks/
-│   │   │   └── useApi.js        # Fetch wrapper with loading/error
+│   │   │   └── useApi.js
 │   │   └── services/
-│   │       └── api.js           # API base URL + endpoints
+│   │       └── api.js
 │   ├── index.html
 │   ├── vite.config.js
 │   └── package.json
@@ -162,11 +169,13 @@ NewsAPI / RSS feeds
   (every 60 min)            │
                             ├── articles
   [Clustering script] ◄─────┤  stories
-  (TF-IDF)           ──────►│
+  (TF-IDF + entities)──────►│
                             ├── lean_labels
   [Labeling script]  ◄──────┤  outlets (AllSides)
   (AllSides CSV)     ──────►│
-                            └── fact_checks (Sprint 2)
+                            └── fact_checks
+                                    ▲
+  [run_factchecks.py] ─ Google Fact Check Tools API
                                     │
                             [FastAPI /api/v1]
                                     │

@@ -5,8 +5,8 @@ Endpoints (Sprint 1):
   GET /api/v1/stories              — paginated list of trending stories
   GET /api/v1/stories/{story_id}   — story detail with articles grouped by lean
 
-Endpoints (Sprint 2 — stub only):
-  GET /api/v1/stories/{story_id}/factchecks
+Endpoints (Sprint 2):
+  GET /api/v1/stories/{story_id}/factchecks — cached fact-check reviews
 """
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -170,18 +170,17 @@ def get_story(story_id: int, db: Session = Depends(get_db)):
     )
 
 
-# ── GET /stories/{story_id}/factchecks — Sprint 2 stub ────────────────────
+# ── GET /stories/{story_id}/factchecks ────────────────────────────────────
 
 @router.get(
     "/stories/{story_id}/factchecks",
     response_model=FactChecksResponse,
-    summary="Fact-check panel for a story (Sprint 2)",
+    summary="Fact-check panel for a story",
 )
 def get_fact_checks(story_id: int, db: Session = Depends(get_db)):
     """
-    Sprint 2: returns cached fact-check claim reviews for a story,
-    or a clear 'No matching claim reviews found.' message.
-    Currently returns the stub response — full implementation in Sprint 2.
+    Returns cached fact-check rows for a story (no_match=False only).
+    If none exist, or only a no_match placeholder was stored, returns has_results=False.
     """
     story = db.query(Story).filter(Story.id == story_id).first()
     if not story:

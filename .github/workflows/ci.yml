@@ -50,6 +50,7 @@ jobs:
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/clearview_test
           NEWSAPI_KEY: dummy_key_for_tests
+          GOOGLE_FACTCHECK_API_KEY: dummy_key_for_tests
         run: |
           cd backend
           pytest -v
