@@ -44,8 +44,16 @@ with transparent bias labels and professional fact-check links.
 git clone https://github.com/YOUR_USERNAME/clearview-news-dashboard.git
 cd clearview-news-dashboard
 cp backend/.env.example backend/.env
-# Edit backend/.env — set DATABASE_URL, NEWSAPI_KEY, GOOGLE_FACTCHECK_API_KEY
+# Edit backend/.env — set NEWSAPI_KEY, GOOGLE_FACTCHECK_API_KEY, and DATABASE_URL if needed
 ```
+
+**`DATABASE_URL` (Mac, no password):** use your macOS username (run `whoami`):
+
+```env
+DATABASE_URL=postgresql://YOUR_MAC_USERNAME@localhost:5432/clearview
+```
+
+Mac users: run `whoami` to get your username. No password is needed if Postgres is configured for trust authentication on localhost (see your `pg_hba.conf` / Postgres install docs). Replace `YOUR_MAC_USERNAME` in `.env` after copying from `.env.example`.
 
 ### 2. Backend
 

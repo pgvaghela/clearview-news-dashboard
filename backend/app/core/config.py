@@ -2,7 +2,7 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    DATABASE_URL: str = "postgresql://postgres:password@localhost:5432/clearview"
+    DATABASE_URL: str = "postgresql://priyanshvaghela@localhost:5432/clearview"
     NEWSAPI_KEY: str = ""
     GOOGLE_FACTCHECK_API_KEY: str = ""
     API_PREFIX: str = "/api/v1"
