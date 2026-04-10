@@ -1,0 +1,20 @@
+# Local development only — fixed credentials so clone → copy .env → run (no personal DB password).
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: clearview
+      POSTGRES_PASSWORD: clearview
+      POSTGRES_DB: clearview
+    ports:
+      - "5432:5432"
+    volumes:
+      - clearview_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U clearview -d clearview"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  clearview_pgdata:

@@ -32,36 +32,27 @@ with transparent bias labels and professional fact-check links.
 ## Setup
 
 ### Prerequisites
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (recommended — gives everyone the same Postgres with **no personal password**)
 - Python 3.11+
 - Node.js 20+
-- PostgreSQL 15+
-- A [NewsAPI](https://newsapi.org/) API key (ingestion)
-- A [Google Fact Check Tools API](https://developers.google.com/fact-check/tools/api) key (`GOOGLE_FACTCHECK_API_KEY`) for fact-check lookup and population
+- Optional: [NewsAPI](https://newsapi.org/) and [Google Fact Check Tools](https://developers.google.com/fact-check/tools/api) keys in `backend/.env` for ingestion and fact-check scripts (placeholders are fine to boot the API)
 
-### 1. Clone & configure environment
+### 1. Clone, database, and environment
 
 ```bash
 git clone https://github.com/YOUR_USERNAME/clearview-news-dashboard.git
 cd clearview-news-dashboard
+
+# Start Postgres (fixed dev user/password — see docker-compose.yml; nothing to type)
+docker compose up -d
+
 cp backend/.env.example backend/.env
-# Edit backend/.env — set NEWSAPI_KEY, GOOGLE_FACTCHECK_API_KEY, and DATABASE_URL if needed
+# Optional: edit backend/.env and replace NEWSAPI_KEY / GOOGLE_FACTCHECK_API_KEY when you run ingest / fact checks
 ```
 
-**`DATABASE_URL` (Mac, no password):** connect over the **Unix socket**, not `localhost:5432`. TCP often triggers `fe_sendauth: no password supplied` because `pg_hba.conf` requires a password for TCP.
+The default **`DATABASE_URL`** in `.env.example` matches the Compose service (`clearview` / `clearview`). You do **not** need your own macOS Postgres password.
 
-```env
-DATABASE_URL=postgresql://YOUR_MAC_USERNAME@/clearview?host=/tmp
-```
-
-Replace `YOUR_MAC_USERNAME` with the output of `whoami`. The `host=/tmp` directory is the default on many Mac installs (Homebrew, Postgres.app). If it still fails, run `psql -c "SHOW unix_socket_directories;"` and put that path in `?host=...`.
-
-Create the database over the same socket if `createdb` asks for a password:
-
-```bash
-PGHOST=/tmp createdb clearview 2>/dev/null || echo "Database already exists"
-```
-
-**Alternative:** keep using `postgresql://user:PASSWORD@localhost:5432/clearview` if you prefer TCP with a password.
+If port **5432** is already in use, stop your other Postgres or change the host port in `docker-compose.yml` and set `DATABASE_URL` accordingly.
 
 ### 2. Backend
 
@@ -71,10 +62,7 @@ python -m venv venv
 source venv/bin/activate        # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 
-# Create the database
-createdb clearview              # or use psql
-
-# Run migrations
+# Run migrations (database "clearview" is created by Docker)
 alembic upgrade head
 
 # Seed AllSides outlet data
@@ -105,6 +93,10 @@ npm run dev
 
 App: http://localhost:5173 — the Vite dev server proxies `/api` to `http://localhost:8000`, so run the backend at the same time for live data.
 
+### Without Docker
+
+If you use your own PostgreSQL, set **`DATABASE_URL`** in `backend/.env` to a URL your server accepts (for example your OS user over a Unix socket, or `user:password@localhost:5432/clearview`). The repo default is tuned for `docker compose`.
+
 ### 4. Run tests
 
 ```bash
@@ -121,6 +113,7 @@ cd frontend && npm run test
 
 ```
 clearview/
+├── docker-compose.yml          # Local Postgres (dev credentials; see file)
 ├── backend/
 │   ├── app/
 │   │   ├── main.py              # FastAPI app entry point

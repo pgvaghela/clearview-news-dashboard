@@ -2,9 +2,8 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    # Mac/Homebrew/Postgres.app: use Unix socket (no TCP password prompt).
-    # If this fails, run: psql -c "SHOW unix_socket_directories;" and set ?host= to that path.
-    DATABASE_URL: str = "postgresql://priyanshvaghela@/clearview?host=/tmp"
+    # Default matches docker-compose.yml (dev). Override via .env for production.
+    DATABASE_URL: str = "postgresql://clearview:clearview@localhost:5432/clearview"
     NEWSAPI_KEY: str = ""
     GOOGLE_FACTCHECK_API_KEY: str = ""
     API_PREFIX: str = "/api/v1"
