@@ -73,8 +73,8 @@ python scripts/cluster_and_label.py
 # Fetch and cache fact checks for stories (manual; add to cron after clustering)
 python scripts/run_factchecks.py
 
-# Start the API server
-uvicorn app.main:app --reload --port 8000
+# Start the API server (--reload-dir avoids watching .venv if it lives under backend/)
+uvicorn app.main:app --reload --port 8000 --reload-dir app
 ```
 
 API docs: http://localhost:8000/docs
