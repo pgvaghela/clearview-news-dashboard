@@ -50,9 +50,9 @@ cp backend/.env.example backend/.env
 # Optional: edit backend/.env and replace NEWSAPI_KEY / GOOGLE_FACTCHECK_API_KEY when you run ingest / fact checks
 ```
 
-The default **`DATABASE_URL`** in `.env.example` matches the Compose service (`clearview` / `clearview`). You do **not** need your own macOS Postgres password.
+The default **`DATABASE_URL`** in `.env.example` matches the Compose service (`clearview` / `clearview`) on **localhost:5433** (container still uses 5432 internally). That avoids clashing with a **local Postgres on 5432**. You do **not** need your own macOS Postgres password.
 
-If port **5432** is already in use, stop your other Postgres or change the host port in `docker-compose.yml` and set `DATABASE_URL` accordingly.
+If **5433** is also taken, change the left port in `docker-compose.yml` (e.g. `5434:5432`) and set `DATABASE_URL` to the same host port.
 
 ### 2. Backend
 
@@ -95,7 +95,7 @@ App: http://localhost:5173 — the Vite dev server proxies `/api` to `http://loc
 
 ### Without Docker
 
-If you use your own PostgreSQL, set **`DATABASE_URL`** in `backend/.env` to a URL your server accepts (for example your OS user over a Unix socket, or `user:password@localhost:5432/clearview`). The repo default is tuned for `docker compose`.
+If you use your own PostgreSQL, set **`DATABASE_URL`** in `backend/.env` to a URL your server accepts. The repo default is tuned for `docker compose` on port **5433**.
 
 ### 4. Run tests
 
