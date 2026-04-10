@@ -47,13 +47,21 @@ cp backend/.env.example backend/.env
 # Edit backend/.env — set NEWSAPI_KEY, GOOGLE_FACTCHECK_API_KEY, and DATABASE_URL if needed
 ```
 
-**`DATABASE_URL` (Mac, no password):** use your macOS username (run `whoami`):
+**`DATABASE_URL` (Mac, no password):** connect over the **Unix socket**, not `localhost:5432`. TCP often triggers `fe_sendauth: no password supplied` because `pg_hba.conf` requires a password for TCP.
 
 ```env
-DATABASE_URL=postgresql://YOUR_MAC_USERNAME@localhost:5432/clearview
+DATABASE_URL=postgresql://YOUR_MAC_USERNAME@/clearview?host=/tmp
 ```
 
-Mac users: run `whoami` to get your username. No password is needed if Postgres is configured for trust authentication on localhost (see your `pg_hba.conf` / Postgres install docs). Replace `YOUR_MAC_USERNAME` in `.env` after copying from `.env.example`.
+Replace `YOUR_MAC_USERNAME` with the output of `whoami`. The `host=/tmp` directory is the default on many Mac installs (Homebrew, Postgres.app). If it still fails, run `psql -c "SHOW unix_socket_directories;"` and put that path in `?host=...`.
+
+Create the database over the same socket if `createdb` asks for a password:
+
+```bash
+PGHOST=/tmp createdb clearview 2>/dev/null || echo "Database already exists"
+```
+
+**Alternative:** keep using `postgresql://user:PASSWORD@localhost:5432/clearview` if you prefer TCP with a password.
 
 ### 2. Backend
 
