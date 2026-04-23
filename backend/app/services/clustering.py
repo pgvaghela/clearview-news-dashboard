@@ -5,13 +5,13 @@ Algorithm:
 1. Collect all un-clustered articles (story_id IS NULL).
 2. Build a TF-IDF matrix over their titles.
 3. Compute pairwise cosine similarity.
-4. Group articles where similarity >= SIMILARITY_THRESHOLD and entity overlap holds.
+4. Group pairs where TF-IDF sim >= threshold OR entity overlap matches (union-find).
 5. For each group:
    - If the group overlaps an existing story, extend that story.
    - Otherwise create a new Story with a representative headline.
 6. Update article.story_id for all grouped articles.
 
-Current accuracy: ~86% on 200-article manual spot-check (TF-IDF + entity overlap).
+Threshold tuned to merge cross-outlet coverage on the same event (manual spot-check as needed).
 """
 
 from __future__ import annotations
@@ -29,7 +29,7 @@ from app.models.models import Article, Story
 logger = logging.getLogger(__name__)
 
 # ── Config ────────────────────────────────────────────────────────────────
-SIMILARITY_THRESHOLD = 0.35   # cosine sim >= this → same story
+SIMILARITY_THRESHOLD = 0.15   # cosine sim >= this → same story (pair with entity OR branch)
 MIN_CLUSTER_SIZE = 1          # single articles get their own story
 MAX_FEATURES = 5000
 
@@ -117,9 +117,9 @@ def cluster_articles(db: Session) -> dict:
 
     for i in range(len(unclustered)):
         for j in range(i + 1, len(unclustered)):
-            if sim_matrix[i][j] >= SIMILARITY_THRESHOLD and _entity_overlap(
-                unclustered[i], unclustered[j]
-            ):
+            if sim_matrix[i][j] >= SIMILARITY_THRESHOLD:
+                union(i, j)
+            elif _entity_overlap(unclustered[i], unclustered[j]):
                 union(i, j)
 
     # Build groups
@@ -169,7 +169,9 @@ def cluster_articles(db: Session) -> dict:
             a.story_id = story.id
             articles_assigned += 1
 
-        # Refresh article count and lean categories
+        # Flush so _refresh_story_meta can query the newly assigned story_ids
+        # (session uses autoflush=False, so we must flush explicitly).
+        db.flush()
         _refresh_story_meta(db, story)
 
     db.commit()

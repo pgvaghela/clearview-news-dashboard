@@ -15,13 +15,44 @@
 
 .story-card__meta {
   display: flex;
-  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
   margin-bottom: 8px;
 }
 .story-card__time,
 .story-card__count {
   font-size: 0.75rem;
   color: var(--color-text-muted);
+}
+
+.story-card__badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.story-card__fact-checked {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-fact-checked);
+  border: 1px solid rgba(52, 211, 153, 0.45);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.story-card__webcite-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-center);
+  border: 1px solid rgba(167, 139, 250, 0.45);
+  padding: 2px 8px;
+  border-radius: 4px;
 }
 
 .story-card__headline {

@@ -1,9 +1,12 @@
 """
 Article ingestion script — fetches articles from NewsAPI and RSS feeds.
 
-Outlets covered (8 total):
-  NewsAPI: BBC News, Reuters, Fox News, NPR, The Guardian, Associated Press,
-           CNN, ABC News
+Outlets covered (13 total, spanning all five lean categories):
+  Center:     BBC News, Reuters, Associated Press
+  Lean Left:  NPR, The Guardian, CNN, ABC News
+  Left:       MSNBC
+  Lean Right: The Wall Street Journal, The New York Post
+  Right:      Fox News, Breitbart
 
 Run manually: python scripts/ingest.py
 Will be scheduled via cron every 60 minutes (target: Sprint 1 completion 03/27).
@@ -34,14 +37,23 @@ logger = logging.getLogger(__name__)
 # ── NewsAPI sources to fetch ───────────────────────────────────────────────
 
 NEWSAPI_SOURCES = [
+    # Center
     "bbc-news",
     "reuters",
-    "fox-news",
+    "associated-press",
+    # Lean Left
     "npr",
     "the-guardian-uk",
-    "associated-press",
     "cnn",
     "abc-news",
+    # Left
+    "msnbc",
+    # Lean Right
+    "the-wall-street-journal",
+    "the-new-york-post",
+    # Right
+    "fox-news",
+    "breitbart-news",
 ]
 
 NEWSAPI_BASE = "https://newsapi.org/v2/top-headlines"

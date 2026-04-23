@@ -1,7 +1,14 @@
 from datetime import datetime
 from sqlalchemy import (
-    Column, Integer, String, Text, DateTime,
-    ForeignKey, Boolean, UniqueConstraint
+    Column,
+    Integer,
+    String,
+    Text,
+    DateTime,
+    ForeignKey,
+    Boolean,
+    UniqueConstraint,
+    JSON,
 )
 from sqlalchemy.orm import relationship
 from app.db.database import Base
@@ -62,6 +69,9 @@ class Story(Base):
 
     articles = relationship("Article", back_populates="story")
     fact_checks = relationship("FactCheck", back_populates="story")
+    webcite_cache = relationship(
+        "WebciteStoryCache", back_populates="story", uselist=False
+    )
 
 
 class LeanLabel(Base):
@@ -101,3 +111,20 @@ class FactCheck(Base):
     no_match = Column(Boolean, default=False)          # True = queried and found nothing
 
     story = relationship("Story", back_populates="fact_checks")
+
+
+class WebciteStoryCache(Base):
+    """Cached WebCite sources/search response per story (headline-scoped)."""
+
+    __tablename__ = "webcite_story_cache"
+
+    id = Column(Integer, primary_key=True, index=True)
+    story_id = Column(Integer, ForeignKey("stories.id"), nullable=False, unique=True)
+    headline_used = Column(String(500), nullable=False)
+    ok = Column(Boolean, default=True, nullable=False)
+    has_citations = Column(Boolean, default=False, nullable=False)
+    error_message = Column(Text, nullable=True)
+    response_json = Column(JSON, nullable=True)
+    fetched_at = Column(DateTime, default=datetime.utcnow)
+
+    story = relationship("Story", back_populates="webcite_cache")

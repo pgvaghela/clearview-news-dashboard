@@ -14,14 +14,18 @@
 
 .lean-tooltip-panel {
   position: absolute;
-  z-index: 100;
+  z-index: 200;
   top: calc(100% + 6px);
   left: 0;
-  width: 280px;
+  width: min(280px, calc(100vw - 48px));
+  max-height: min(55vh, 320px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   background: var(--color-surface-2);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   padding: 14px 16px 12px;
+  padding-right: 28px;
   box-shadow: 0 8px 24px rgba(0,0,0,0.4);
   font-size: 0.82rem;
 }

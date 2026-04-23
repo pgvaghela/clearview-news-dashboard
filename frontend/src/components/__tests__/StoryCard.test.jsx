@@ -44,4 +44,19 @@ describe('StoryCard', () => {
     expect(screen.getByText('Reuters')).toBeInTheDocument()
     expect(screen.getByText('Fox News')).toBeInTheDocument()
   })
+
+  it('shows Fact checked when has_fact_checks is true', () => {
+    wrap({ ...STORY, has_fact_checks: true })
+    expect(screen.getByText('Fact checked')).toBeInTheDocument()
+  })
+
+  it('does not show Fact checked when has_fact_checks is false', () => {
+    wrap({ ...STORY, has_fact_checks: false })
+    expect(screen.queryByText('Fact checked')).not.toBeInTheDocument()
+  })
+
+  it('shows Sources when has_webcite is true', () => {
+    wrap({ ...STORY, has_webcite: true })
+    expect(screen.getByText('Sources')).toBeInTheDocument()
+  })
 })

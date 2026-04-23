@@ -14,6 +14,9 @@ Uses an in-memory SQLite database so no Postgres is required to run tests.
 
 import pytest
 from datetime import datetime
+from unittest.mock import patch
+
+from app.schemas.schemas import WebciteBlock
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -142,6 +145,10 @@ def test_list_stories_returns_stories(client):
     assert "first_seen_at" in story
     assert "last_updated_at" in story
     assert story["article_count"] >= 1
+    assert "has_fact_checks" in story
+    assert isinstance(story["has_fact_checks"], bool)
+    assert "has_webcite" in story
+    assert isinstance(story["has_webcite"], bool)
 
 
 def test_list_stories_includes_preview_articles(client):
@@ -157,6 +164,19 @@ def test_list_stories_includes_preview_articles(client):
         assert "title" in article
         assert "url" in article
         assert "outlet_name" in article
+
+
+def test_list_stories_has_fact_checks_when_cached(client):
+    """GET /stories sets has_fact_checks True when real fact-check rows exist."""
+    db = TestSessionLocal()
+    db.add(FactCheck(story_id=1, no_match=False))
+    db.commit()
+    db.close()
+
+    resp = client.get("/api/v1/stories")
+    assert resp.status_code == 200
+    story = next(s for s in resp.json()["stories"] if s["id"] == 1)
+    assert story["has_fact_checks"] is True
 
 
 def test_get_story_groups_by_lean(client):
@@ -195,8 +215,10 @@ def test_get_story_not_found(client):
     assert resp.status_code == 404
 
 
-def test_factcheck_panel_with_results(client):
+@patch("app.api.routes.load_webcite_block")
+def test_factcheck_panel_with_results(mock_wc, client):
     """GET /factchecks returns seeded fact-check rows when no_match=False."""
+    mock_wc.return_value = WebciteBlock(available=False, status="skipped", message="")
     db = TestSessionLocal()
     db.add(
         FactCheck(
@@ -218,10 +240,13 @@ def test_factcheck_panel_with_results(client):
     data = resp.json()
     assert data["has_results"] is True
     assert len(data["fact_checks"]) >= 1
+    assert "webcite" in data
 
 
-def test_factcheck_panel_no_match(client):
-    """GET /factchecks ignores no_match placeholder rows."""
+@patch("app.api.routes.load_webcite_block")
+def test_factcheck_panel_no_match(mock_wc, client):
+    """GET /factchecks ignores no_match placeholder rows (no lazy sync when a row exists)."""
+    mock_wc.return_value = WebciteBlock(available=False, status="skipped", message="")
     db = TestSessionLocal()
     db.add(FactCheck(story_id=1, no_match=True))
     db.commit()
@@ -232,3 +257,4 @@ def test_factcheck_panel_no_match(client):
     data = resp.json()
     assert data["has_results"] is False
     assert "No matching claim reviews found." in data["message"]
+    assert "webcite" in data

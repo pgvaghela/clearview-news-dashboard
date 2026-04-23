@@ -1,0 +1,95 @@
+.webcite-panel {
+  margin-top: 20px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+}
+
+.webcite-panel__title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 0 0 10px;
+  color: var(--color-text);
+}
+
+.webcite-panel__disclaimer {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  line-height: 1.55;
+  margin: 0 0 14px;
+}
+
+.webcite-panel__disclaimer strong {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.webcite-panel__vendor {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  margin: 0 0 12px;
+}
+
+.webcite-panel__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.webcite-panel__item {
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.webcite-panel__item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.webcite-panel__link {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--color-accent);
+  text-decoration: none;
+  display: inline-block;
+  margin-bottom: 4px;
+}
+
+.webcite-panel__link:hover {
+  text-decoration: underline;
+}
+
+.webcite-panel__title-only {
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.webcite-panel__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  margin-bottom: 4px;
+}
+
+.webcite-panel__snippet {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  line-height: 1.45;
+  margin: 0;
+}
+
+.webcite-panel__state {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--color-text-muted);
+}
+
+.webcite-panel__state--error {
+  color: var(--color-right, #c0392b);
+}

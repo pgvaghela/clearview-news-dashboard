@@ -13,7 +13,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session, joinedload
 
 from app.db.database import get_db
-from app.models.models import Article, Story, FactCheck
+from app.models.models import Article, Story, FactCheck, WebciteStoryCache
 from app.schemas.schemas import (
     StoriesResponse,
     StoryListItem,
@@ -23,6 +23,8 @@ from app.schemas.schemas import (
     FactCheckSchema,
 )
 from app.services.labeling import get_lean_info_for_outlet
+from app.services.factchecks import sync_fact_checks_for_story
+from app.services.webcite import load_webcite_block
 
 router = APIRouter()
 
@@ -82,6 +84,32 @@ def list_stories(
         .all()
     )
 
+    story_ids = [s.id for s in stories]
+    factcheck_story_ids: set[int] = set()
+    if story_ids:
+        factcheck_story_ids = {
+            row[0]
+            for row in db.query(FactCheck.story_id)
+            .filter(
+                FactCheck.story_id.in_(story_ids),
+                FactCheck.no_match.is_(False),
+            )
+            .distinct()
+            .all()
+        }
+        webcite_story_ids = {
+            row[0]
+            for row in db.query(WebciteStoryCache.story_id)
+            .filter(
+                WebciteStoryCache.story_id.in_(story_ids),
+                WebciteStoryCache.ok.is_(True),
+                WebciteStoryCache.has_citations.is_(True),
+            )
+            .all()
+        }
+    else:
+        webcite_story_ids = set()
+
     story_items = []
     for story in stories:
         # Build one preview article per lean bucket
@@ -108,6 +136,8 @@ def list_stories(
                 last_updated_at=story.last_updated_at,
                 article_count=story.article_count,
                 lean_categories_present=story.lean_categories_present,
+                has_fact_checks=story.id in factcheck_story_ids,
+                has_webcite=story.id in webcite_story_ids,
                 preview_articles=preview_articles,
             )
         )
@@ -179,8 +209,12 @@ def get_story(story_id: int, db: Session = Depends(get_db)):
 )
 def get_fact_checks(story_id: int, db: Session = Depends(get_db)):
     """
-    Returns cached fact-check rows for a story (no_match=False only).
-    If none exist, or only a no_match placeholder was stored, returns has_results=False.
+    Returns fact-check rows for a story (no_match=False only).
+
+    If the story has never been fact-checked (no rows in ``fact_checks``), triggers
+    one Google Fact Check Tools sync. If only ``no_match`` placeholders exist, returns
+    the empty message without re-querying Google — use ``scripts/run_factchecks.py``
+    to clear placeholders and retry after fixing the API key.
     """
     story = db.query(Story).filter(Story.id == story_id).first()
     if not story:
@@ -193,12 +227,32 @@ def get_fact_checks(story_id: int, db: Session = Depends(get_db)):
         .all()
     )
 
+    # First-ever fetch: no rows at all. Avoid re-calling Google on every page view when
+    # we already stored no_match (user can re-run scripts/run_factchecks.py to retry).
+    if not fact_checks:
+        any_row = (
+            db.query(FactCheck.id)
+            .filter(FactCheck.story_id == story_id)
+            .first()
+        )
+        if any_row is None:
+            sync_fact_checks_for_story(db, story_id)
+            fact_checks = (
+                db.query(FactCheck)
+                .filter(FactCheck.story_id == story_id, FactCheck.no_match.is_(False))
+                .order_by(FactCheck.review_date.desc())
+                .all()
+            )
+
+    webcite = load_webcite_block(db, story)
+
     if not fact_checks:
         return FactChecksResponse(
             story_id=story_id,
             has_results=False,
             message="No matching claim reviews found.",
             fact_checks=[],
+            webcite=webcite,
         )
 
     return FactChecksResponse(
@@ -206,4 +260,5 @@ def get_fact_checks(story_id: int, db: Session = Depends(get_db)):
         has_results=True,
         message=f"{len(fact_checks)} claim review(s) found.",
         fact_checks=[FactCheckSchema.model_validate(fc) for fc in fact_checks],
+        webcite=webcite,
     )

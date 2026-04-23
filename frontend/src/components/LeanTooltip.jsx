@@ -19,15 +19,32 @@ export default function LeanTooltip({ whyLabel, ratingProvider, ratingMethod, co
     <span className="lean-tooltip-wrapper">
       <button
         className="why-label-btn"
-        onClick={() => setOpen(o => !o)}
+        onClick={(e) => {
+          e.stopPropagation()
+          setOpen((o) => !o)
+        }}
         aria-expanded={open}
       >
         Why this label?
       </button>
 
       {open && (
-        <div className="lean-tooltip-panel" role="tooltip">
-          <button className="tooltip-close" onClick={() => setOpen(false)} aria-label="Close">✕</button>
+        <div
+          className="lean-tooltip-panel"
+          role="tooltip"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            type="button"
+            className="tooltip-close"
+            onClick={(e) => {
+              e.stopPropagation()
+              setOpen(false)
+            }}
+            aria-label="Close"
+          >
+            ✕
+          </button>
 
           {ratingProvider && (
             <p className="tooltip-row">

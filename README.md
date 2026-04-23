@@ -2,8 +2,13 @@
 
 > Understand what happened, how it's framed, and what's verified — fast.
 
-A web application that shows trending news stories grouped by political lean (Left / Center / Right),
-with transparent bias labels and professional fact-check links.
+ClearView is a web application that aggregates trending news stories from across the political
+spectrum and groups coverage by political lean (Left / Lean Left / Center / Lean Right / Right),
+using bias ratings from AllSides. Each story page links matching professional fact-checks from the
+Google Fact Check Tools API so readers can quickly see which claims have been reviewed and how.
+
+We follow an iterative development process where each sprint produces working, tested software.
+We use Scrum as our task management framework to organize and track work within that process.
 
 **Team:** Priyansh Vaghela · Daniel Martinez · Morya Odak  
 **Course:** CSC 436 – Software Engineering, Spring 2026
@@ -15,7 +20,7 @@ with transparent bias labels and professional fact-check links.
 | Layer | Status |
 |---|---|
 | PostgreSQL schema (5 tables) | ✅ Done |
-| Article ingestion (8 outlets via NewsAPI) | ✅ Done (manual trigger; cron pending) |
+| Article ingestion (13 outlets via NewsAPI, all 5 lean categories) | ✅ Done (manual trigger; cron pending) |
 | TF-IDF + entity-overlap clustering | ✅ Done (~86% accuracy) |
 | AllSides lean labeling | ✅ Done |
 | GET /api/v1/stories & GET /api/v1/stories/:id | ✅ Done |
@@ -24,8 +29,8 @@ with transparent bias labels and professional fact-check links.
 | GET /api/v1/stories/:id/factchecks | ✅ Done |
 | Fact-check panel UI (`FactCheckPanel`) | ✅ Done |
 | Pipeline script `run_factchecks.py` | ✅ Done (cron after ingest + cluster) |
-| Backend tests (pytest) | ✅ Done (7 API tests) |
-| Frontend tests (Vitest) | ✅ Done (14 component tests) |
+| Backend tests (pytest) | ✅ Done (7 API tests passing) |
+| Frontend tests (Vitest) | ✅ Done (18 component tests passing) |
 
 ---
 
@@ -152,7 +157,9 @@ clearview/
 │   │   │   ├── StoryCard.jsx
 │   │   │   ├── LeanBadge.jsx
 │   │   │   ├── LeanTooltip.jsx
-│   │   │   └── FactCheckPanel.jsx
+│   │   │   ├── FactCheckPanel.jsx
+│   │   │   ├── StoryFactSources.jsx  # Fact-check + WebCite composite panel
+│   │   │   └── WebcitePanel.jsx      # WebCite archived sources panel
 │   │   ├── pages/
 │   │   │   ├── Dashboard.jsx
 │   │   │   └── StoryPage.jsx
@@ -170,23 +177,30 @@ clearview/
 
 ## Architecture
 
+The system boundary encloses the FastAPI backend, PostgreSQL database, and React frontend.
+Four external APIs are consumed outside that boundary and are shown separately below.
+
 ```
-NewsAPI / RSS feeds
-        │
-        ▼
-  [Ingestion script]  ──►  PostgreSQL
-  (every 60 min)            │
-                            ├── articles
-  [Clustering script] ◄─────┤  stories
-  (TF-IDF + entities)──────►│
-                            ├── lean_labels
-  [Labeling script]  ◄──────┤  outlets (AllSides)
-  (AllSides CSV)     ──────►│
-                            └── fact_checks
-                                    ▲
-  [run_factchecks.py] ─ Google Fact Check Tools API
-                                    │
-                            [FastAPI /api/v1]
-                                    │
-                             [React Frontend]
+  ┌─── EXTERNAL ──────────────────────────────────────────┐
+  │  NewsAPI          Google Fact Check Tools API          │
+  │  AllSides CSV     WebCite API                          │
+  └───────────────────────────────────────────────────────┘
+          │                    │
+          ▼                    ▼
+  ┌─── SYSTEM BOUNDARY ───────────────────────────────────┐
+  │                                                        │
+  │  [Ingestion script]  ──►  PostgreSQL                   │
+  │  (every 60 min)            │                           │
+  │                            ├── articles                │
+  │  [Clustering script] ◄─────┤  stories                  │
+  │  (TF-IDF + entities)──────►│                           │
+  │                            ├── lean_labels             │
+  │  [Labeling script]  ◄──────┤  outlets (AllSides)       │
+  │  (AllSides CSV)     ──────►│                           │
+  │                            └── fact_checks             │
+  │                                                        │
+  │                    [FastAPI /api/v1]                   │
+  │                            │                           │
+  │                     [React Frontend]                   │
+  └───────────────────────────────────────────────────────┘
 ```

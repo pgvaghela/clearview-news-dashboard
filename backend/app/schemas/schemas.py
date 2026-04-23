@@ -50,6 +50,10 @@ class StoryListItem(BaseModel):
     last_updated_at: datetime
     article_count: int
     lean_categories_present: Optional[str] = None
+    # True when at least one cached claim review exists (no_match=False)
+    has_fact_checks: bool = False
+    # True when WebCite cache has at least one source citation for this story
+    has_webcite: bool = False
     # Preview: one article per lean category
     preview_articles: list[ArticleSchema] = []
 
@@ -95,8 +99,30 @@ class FactCheckSchema(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class WebciteCitationOut(BaseModel):
+    title: Optional[str] = None
+    url: Optional[str] = None
+    snippet: Optional[str] = None
+    credibility_score: Optional[int] = None
+    source_type: Optional[str] = None
+    stance: Optional[str] = None
+
+
+class WebciteBlock(BaseModel):
+    """WebCite sources/search summary for the story headline."""
+
+    available: bool = True
+    status: str = "skipped"  # ok | no_data | error | skipped
+    message: Optional[str] = None
+    thread_id: Optional[str] = None
+    stance_summary: Optional[str] = None
+    claim: Optional[str] = None
+    citations: list[WebciteCitationOut] = []
+
+
 class FactChecksResponse(BaseModel):
     story_id: int
     has_results: bool
     message: str   # "No matching claim reviews found." if empty
     fact_checks: list[FactCheckSchema] = []
+    webcite: WebciteBlock = WebciteBlock()

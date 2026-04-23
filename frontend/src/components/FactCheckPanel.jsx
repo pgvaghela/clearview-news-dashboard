@@ -1,5 +1,3 @@
-import { useApi } from '../hooks/useApi.js'
-import { fetchFactChecks } from '../services/api.js'
 import './FactCheckPanel.css'
 
 function formatDate(iso) {
@@ -12,15 +10,19 @@ function formatDate(iso) {
   }
 }
 
-export default function FactCheckPanel({ storyId }) {
-  const { data, loading, error } = useApi(
-    () => fetchFactChecks(storyId),
-    [storyId]
-  )
-
+/**
+ * Google Fact Check Tools — professional claim reviews only.
+ * Props from parent (StoryFactSources) so WebCite is not bundled here.
+ */
+export default function FactCheckPanel({ data, loading, error }) {
   return (
     <section className="fact-check-panel">
       <h2 className="fact-check-panel__title">Fact checks</h2>
+      <p className="fact-check-panel__intro">
+        These entries come from{' '}
+        <strong>Google&apos;s Fact Check index</strong> (participating fact-check
+        organizations). They are not the same as ordinary news articles.
+      </p>
 
       {loading && (
         <p className="fact-check-panel__state">Loading fact checks…</p>
@@ -32,8 +34,19 @@ export default function FactCheckPanel({ storyId }) {
         </p>
       )}
 
+      {data && !loading && !error && data.has_results && (
+        <h3 className="fact-check-panel__subsection-title">Indexed reviews</h3>
+      )}
+
       {data && !loading && !error && !data.has_results && (
-        <p className="fact-check-panel__message">{data.message}</p>
+        <div className="fact-check-panel__google-empty">
+          <h3 className="fact-check-panel__subsection-title">Indexed reviews</h3>
+          <p className="fact-check-panel__message">
+            No fact-check article in Google&apos;s index matched this headline yet. That is
+            typical for many stories — see <strong>Related coverage</strong> below for news
+            links (those are not fact-check verdicts).
+          </p>
+        </div>
       )}
 
       {data && !loading && !error && data.has_results && data.fact_checks?.length > 0 && (

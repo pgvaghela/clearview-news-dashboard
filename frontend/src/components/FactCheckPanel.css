@@ -9,7 +9,30 @@
 .fact-check-panel__title {
   font-size: 0.95rem;
   font-weight: 700;
-  margin: 0 0 12px;
+  margin: 0 0 8px;
+}
+
+.fact-check-panel__intro {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+  margin: 0 0 18px;
+}
+
+.fact-check-panel__intro strong {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.fact-check-panel__subsection-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  margin: 0 0 10px;
+  color: var(--color-text);
+}
+
+.fact-check-panel__google-empty {
+  margin-bottom: 4px;
 }
 
 .fact-check-panel__state {

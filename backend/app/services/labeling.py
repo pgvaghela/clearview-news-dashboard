@@ -85,12 +85,17 @@ UNKNOWN_META = {
 
 
 def _extract_domain(url: str) -> str | None:
-    """Return the bare domain (e.g. 'foxnews.com') from a URL."""
+    """Return the bare domain (e.g. 'foxnews.com') from a URL.
+
+    Strips common feed/mobile subdomains so that URLs like
+    feeds.bbci.co.uk, rss.cnn.com, news.yahoo.com, and m.foxnews.com
+    resolve to the same domain stored in the outlets table.
+    """
     try:
         parsed = urlparse(url)
         host = parsed.netloc.lower()
-        # Strip www.
-        host = re.sub(r"^www\.", "", host)
+        # Strip www. and common feed/mobile prefixes
+        host = re.sub(r"^(www|feeds|rss|news|m|amp)\.", "", host)
         return host if host else None
     except Exception:
         return None

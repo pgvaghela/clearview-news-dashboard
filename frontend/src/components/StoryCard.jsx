@@ -33,6 +33,16 @@ export default function StoryCard({ story }) {
       <div className="story-card__meta">
         <span className="story-card__time">{timeAgo(story.last_updated_at)}</span>
         <span className="story-card__count">{story.article_count} sources</span>
+        {(story.has_fact_checks || story.has_webcite) && (
+          <div className="story-card__badge-row">
+            {story.has_fact_checks && (
+              <span className="story-card__fact-checked">Fact checked</span>
+            )}
+            {story.has_webcite && (
+              <span className="story-card__webcite-badge">Sources</span>
+            )}
+          </div>
+        )}
       </div>
 
       <h2 className="story-card__headline">{story.headline}</h2>

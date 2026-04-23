@@ -3,7 +3,7 @@ import { useApi } from '../hooks/useApi.js'
 import { fetchStory } from '../services/api.js'
 import LeanBadge from '../components/LeanBadge.jsx'
 import LeanTooltip from '../components/LeanTooltip.jsx'
-import FactCheckPanel from '../components/FactCheckPanel.jsx'
+import StoryFactSources from '../components/StoryFactSources.jsx'
 import './StoryPage.css'
 
 const LEAN_COLUMNS = [
@@ -13,6 +13,13 @@ const LEAN_COLUMNS = [
   { key: 'lean_right', label: 'Lean Right', colorVar: 'var(--color-lean-right)' },
   { key: 'right',      label: 'Right',      colorVar: 'var(--color-right)' },
 ]
+
+function scrollToLeanColumn(key) {
+  document.getElementById(`story-lean-${key}`)?.scrollIntoView({
+    behavior: 'smooth',
+    block: 'start',
+  })
+}
 
 function ArticleItem({ article }) {
   return (
@@ -61,9 +68,11 @@ export default function StoryPage() {
   const timeAgo = (dateStr) => {
     if (!dateStr) return ''
     const diff = Math.floor((Date.now() - new Date(dateStr)) / 60000)
-    if (diff < 60) return `${diff}m ago`
-    if (diff < 1440) return `${Math.floor(diff / 60)}h ago`
-    return `${Math.floor(diff / 1440)}d ago`
+    const d = Math.max(0, diff)
+    if (d < 1) return 'just now'
+    if (d < 60) return `${d}m ago`
+    if (d < 1440) return `${Math.floor(d / 60)}h ago`
+    return `${Math.floor(d / 1440)}d ago`
   }
 
   return (
@@ -102,15 +111,32 @@ export default function StoryPage() {
               <span className="lean-explainer__text">
                 Coverage grouped by political lean —
               </span>
-              {LEAN_COLUMNS.map(col => (
-                <span
-                  key={col.key}
-                  className="lean-explainer__chip"
-                  style={{ color: col.colorVar }}
-                >
-                  {col.label}
-                </span>
-              ))}
+              {LEAN_COLUMNS.map(col => {
+                const count = (story[col.key] || []).length
+                if (count > 0) {
+                  return (
+                    <button
+                      key={col.key}
+                      type="button"
+                      className="lean-explainer__chip lean-explainer__chip--link"
+                      style={{ color: col.colorVar }}
+                      onClick={() => scrollToLeanColumn(col.key)}
+                    >
+                      {col.label}
+                    </button>
+                  )
+                }
+                return (
+                  <span
+                    key={col.key}
+                    className="lean-explainer__chip lean-explainer__chip--muted"
+                    style={{ color: col.colorVar }}
+                    title="No articles in this category for this story"
+                  >
+                    {col.label}
+                  </span>
+                )
+              })}
             </div>
 
             <div
@@ -120,6 +146,7 @@ export default function StoryPage() {
               {filledColumns.map(col => (
                 <section
                   key={col.key}
+                  id={`story-lean-${col.key}`}
                   className="lean-column"
                   style={{ '--col-color': col.colorVar }}
                 >
@@ -144,7 +171,7 @@ export default function StoryPage() {
               ))}
             </div>
 
-            <FactCheckPanel storyId={story.id} />
+            <StoryFactSources storyId={story.id} />
           </>
         )}
       </main>
