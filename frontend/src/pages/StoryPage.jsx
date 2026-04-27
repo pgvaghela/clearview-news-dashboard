@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useApi } from '../hooks/useApi.js'
 import { fetchStory } from '../services/api.js'
 import LeanBadge from '../components/LeanBadge.jsx'
@@ -21,9 +23,14 @@ function scrollToLeanColumn(key) {
   })
 }
 
-function ArticleItem({ article }) {
+function ArticleItem({ article, index }) {
   return (
-    <div className="article-item">
+    <motion.div
+      className="article-item"
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, delay: index * 0.07, ease: [0.25, 0.1, 0.25, 1] }}
+    >
       <div className="article-item__outlet">
         <span>{article.outlet_name}</span>
         <LeanBadge lean={article.lean_display} />
@@ -48,13 +55,14 @@ function ArticleItem({ article }) {
           confidence={article.confidence}
         />
       </div>
-    </div>
+    </motion.div>
   )
 }
 
 export default function StoryPage() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const [activeFilter, setActiveFilter] = useState(null)
 
   const { data: story, loading, error } = useApi(
     () => fetchStory(id),
@@ -64,6 +72,10 @@ export default function StoryPage() {
   const filledColumns = LEAN_COLUMNS.filter(
     col => story && (story[col.key] || []).length > 0
   )
+
+  const visibleColumns = activeFilter
+    ? filledColumns.filter(col => col.key === activeFilter)
+    : filledColumns
 
   const timeAgo = (dateStr) => {
     if (!dateStr) return ''
@@ -76,54 +88,91 @@ export default function StoryPage() {
   }
 
   return (
-    <div className="story-page">
+    <motion.div
+      className="story-page"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.35 }}
+    >
       <header className="story-page__header">
         <div className="story-page__header-inner">
-          <button className="back-btn" onClick={() => navigate('/')}>
+          <motion.button
+            className="back-btn"
+            onClick={() => navigate('/')}
+            whileHover={{ x: -3 }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+          >
             ← ClearView
-          </button>
+          </motion.button>
 
-          {story && (
-            <>
-              <h1 className="story-page__headline">{story.headline}</h1>
-              <div className="story-page__meta">
-                <span>{story.article_count} sources</span>
-                <span>·</span>
-                <span>Updated {timeAgo(story.last_updated_at)}</span>
-              </div>
-            </>
-          )}
+          <AnimatePresence>
+            {story && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35, delay: 0.1 }}
+              >
+                <h1 className="story-page__headline">{story.headline}</h1>
+                <div className="story-page__meta">
+                  <span>{story.article_count} sources</span>
+                  <span>·</span>
+                  <span>Updated {timeAgo(story.last_updated_at)}</span>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </header>
 
       <main className="story-page__main">
-        {loading && <div className="story-page__state">Loading story…</div>}
+        {loading && (
+          <motion.div
+            className="story-page__state"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            Loading story…
+          </motion.div>
+        )}
 
         {error && (
-          <div className="story-page__state story-page__state--error">
+          <motion.div
+            className="story-page__state story-page__state--error"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
             {error}
-          </div>
+          </motion.div>
         )}
 
         {story && !loading && (
           <>
-            <div className="lean-explainer">
+            <motion.div
+              className="lean-explainer"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.15 }}
+            >
               <span className="lean-explainer__text">
                 Coverage grouped by political lean —
               </span>
               {LEAN_COLUMNS.map(col => {
                 const count = (story[col.key] || []).length
+                const isActive = activeFilter === col.key
                 if (count > 0) {
                   return (
-                    <button
+                    <motion.button
                       key={col.key}
                       type="button"
-                      className="lean-explainer__chip lean-explainer__chip--link"
-                      style={{ color: col.colorVar }}
-                      onClick={() => scrollToLeanColumn(col.key)}
+                      className={`lean-explainer__chip lean-explainer__chip--link${isActive ? ' lean-explainer__chip--active' : ''}`}
+                      style={{ color: col.colorVar, borderBottomWidth: isActive ? '2px' : '1px' }}
+                      onClick={() => setActiveFilter(isActive ? null : col.key)}
+                      whileHover={{ scale: 1.08 }}
+                      whileTap={{ scale: 0.94 }}
                     >
                       {col.label}
-                    </button>
+                    </motion.button>
                   )
                 }
                 return (
@@ -137,18 +186,25 @@ export default function StoryPage() {
                   </span>
                 )
               })}
-            </div>
+            </motion.div>
 
             <div
               className="lean-columns"
               style={{ '--col-count': filledColumns.length || 3 }}
             >
-              {filledColumns.map(col => (
-                <section
+              {visibleColumns.map((col, colIndex) => (
+                <motion.section
                   key={col.key}
                   id={`story-lean-${col.key}`}
                   className="lean-column"
                   style={{ '--col-color': col.colorVar }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    duration: 0.4,
+                    delay: 0.2 + colIndex * 0.1,
+                    ease: [0.25, 0.1, 0.25, 1],
+                  }}
                 >
                   <div className="lean-column__header">
                     <span
@@ -163,11 +219,11 @@ export default function StoryPage() {
                   </div>
 
                   <div className="lean-column__articles">
-                    {story[col.key].map(article => (
-                      <ArticleItem key={article.id} article={article} />
+                    {story[col.key].map((article, i) => (
+                      <ArticleItem key={article.id} article={article} index={i} />
                     ))}
                   </div>
-                </section>
+                </motion.section>
               ))}
             </div>
 
@@ -175,6 +231,6 @@ export default function StoryPage() {
           </>
         )}
       </main>
-    </div>
+    </motion.div>
   )
 }
