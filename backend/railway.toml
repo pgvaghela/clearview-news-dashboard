@@ -2,4 +2,4 @@
 buildCommand = "python3 -m pip install -r requirements.txt"
 
 [deploy]
-startCommand = "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+startCommand = "alembic upgrade head && echo 'Alembic done, starting uvicorn on port '\"$PORT\" && uvicorn app.main:app --host 0.0.0.0 --port $PORT --log-level debug"
