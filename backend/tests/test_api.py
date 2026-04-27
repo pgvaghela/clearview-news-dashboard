@@ -207,6 +207,23 @@ def test_get_story_groups_by_lean(client):
             assert article["rating_provider"] == "AllSides"
 
 
+def test_list_stories_includes_summary(client):
+    """
+    AT-1 enhancement: each story in the list exposes a summary field.
+    """
+    db = TestSessionLocal()
+    story = db.query(Story).filter(Story.id == 1).first()
+    story.summary = "Senate passed an infrastructure bill with bipartisan support."
+    db.commit()
+    db.close()
+
+    resp = client.get("/api/v1/stories")
+    assert resp.status_code == 200
+    story_data = resp.json()["stories"][0]
+    assert "summary" in story_data
+    assert story_data["summary"] == "Senate passed an infrastructure bill with bipartisan support."
+
+
 def test_get_story_not_found(client):
     """
     GET /api/v1/stories/999 returns 404 for a nonexistent story.
@@ -241,6 +258,35 @@ def test_factcheck_panel_with_results(mock_wc, client):
     assert data["has_results"] is True
     assert len(data["fact_checks"]) >= 1
     assert "webcite" in data
+
+
+@patch("app.api.routes.load_webcite_block")
+def test_factcheck_ai_generated_flag(mock_wc, client):
+    """
+    AT-4a enhancement: AI-generated fact checks expose is_ai_generated=True.
+    """
+    mock_wc.return_value = WebciteBlock(available=False, status="skipped", message="")
+    db = TestSessionLocal()
+    db.add(FactCheck(
+        story_id=1,
+        claim_text="AI analysis of infrastructure bill coverage.",
+        claim_reviewed="Senate passes major infrastructure bill",
+        rating="Mostly Accurate",
+        publisher="Claude AI (Anthropic)",
+        no_match=False,
+        is_ai_generated=True,
+    ))
+    db.commit()
+    db.close()
+
+    resp = client.get("/api/v1/stories/1/factchecks")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["has_results"] is True
+    ai_checks = [fc for fc in data["fact_checks"] if fc["is_ai_generated"]]
+    assert len(ai_checks) == 1
+    assert ai_checks[0]["publisher"] == "Claude AI (Anthropic)"
+    assert ai_checks[0]["rating"] == "Mostly Accurate"
 
 
 @patch("app.api.routes.load_webcite_block")
