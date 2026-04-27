@@ -1,19 +1,19 @@
 .story-card {
   background: var(--color-surface);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-sm);
   cursor: pointer;
   outline: none;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  will-change: transform;
-  transition: box-shadow 0.2s ease;
+  border-right: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+  transition: opacity 0.15s ease;
 }
+.story-card:hover { opacity: 0.8; }
 
 .story-card__image-wrap {
   width: 100%;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 3 / 2;
   overflow: hidden;
   background: var(--color-surface-3);
   flex-shrink: 0;
@@ -23,14 +23,14 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.35s ease;
+  transition: transform 0.4s ease;
 }
 .story-card:hover .story-card__image {
-  transform: scale(1.04);
+  transform: scale(1.03);
 }
 
 .story-card__body {
-  padding: 16px;
+  padding: 14px 16px 16px;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -40,8 +40,8 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 5px 8px;
-  margin-bottom: 8px;
+  gap: 5px 6px;
+  margin-bottom: 7px;
 }
 
 .story-card__dot {
@@ -54,9 +54,8 @@
 
 .story-card__time,
 .story-card__count {
-  font-size: 0.68rem;
+  font-size: 0.65rem;
   color: var(--color-text-dim);
-  font-weight: 500;
 }
 
 .story-card__badge-row {
@@ -70,33 +69,26 @@
   font-size: 0.62rem;
   font-weight: 700;
   color: var(--color-fact-checked);
-  background: #f0fdf4;
-  border: 1px solid var(--color-fact-checked);
-  padding: 1px 6px;
-  border-radius: 999px;
 }
 
 .story-card__webcite-badge {
   font-size: 0.62rem;
-  font-weight: 700;
-  color: var(--color-accent);
-  background: var(--color-accent-light);
-  border: 1px solid var(--color-accent);
-  padding: 1px 6px;
-  border-radius: 999px;
+  color: var(--color-text-muted);
 }
 
 .story-card__headline {
-  font-size: 0.97rem;
+  font-family: var(--font-serif);
+  font-size: 1rem;
   font-weight: 700;
-  line-height: 1.38;
-  margin-bottom: 12px;
+  line-height: 1.3;
+  margin-bottom: 10px;
   color: var(--color-text);
-  letter-spacing: -0.01em;
   flex: 1;
 }
 .story-card:hover .story-card__headline {
-  color: var(--color-accent);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
 }
 
 .story-card__summary {
@@ -121,13 +113,17 @@
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
+  padding-top: 8px;
+  border-top: 1px solid var(--color-border-soft);
 }
 .story-card__source {
-  font-size: 0.65rem;
-  color: var(--color-text-muted);
-  background: var(--color-surface-2);
-  padding: 2px 7px;
-  border-radius: 999px;
-  border: 1px solid var(--color-border);
-  font-weight: 500;
+  font-size: 0.62rem;
+  color: var(--color-text-dim);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.story-card__source:not(:last-child)::after {
+  content: ',';
+  margin-right: 2px;
 }
