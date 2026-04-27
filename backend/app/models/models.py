@@ -110,6 +110,7 @@ class FactCheck(Base):
     review_date = Column(DateTime, nullable=True)
     fetched_at = Column(DateTime, default=datetime.utcnow)
     no_match = Column(Boolean, default=False)          # True = queried and found nothing
+    is_ai_generated = Column(Boolean, default=False)   # True = produced by Claude AI
 
     story = relationship("Story", back_populates="fact_checks")
 

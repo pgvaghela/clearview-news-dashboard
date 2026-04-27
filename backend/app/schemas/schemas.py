@@ -97,6 +97,7 @@ class FactCheckSchema(BaseModel):
     publisher: Optional[str] = None
     review_url: Optional[str] = None
     review_date: Optional[datetime] = None
+    is_ai_generated: bool = False
 
     model_config = {"from_attributes": True}
 
