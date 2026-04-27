@@ -9,13 +9,8 @@ import React from 'react'
 const motion = new Proxy({}, {
   get(_, tag) {
     const Component = React.forwardRef(function MotionStub(
-      {
-        children,
-        initial, animate, exit, transition, variants,
-        whileHover, whileTap, whileFocus,
-        onAnimationStart, onAnimationComplete,
-        ...rest
-      },
+      // eslint-disable-next-line no-unused-vars
+      { children, initial, animate, exit, transition, variants, whileHover, whileTap, whileFocus, onAnimationStart, onAnimationComplete, ...rest },
       ref
     ) {
       return React.createElement(tag, { ...rest, ref }, children)

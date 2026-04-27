@@ -6,7 +6,6 @@ Runs after clustering. Skips stories that already have a summary.
 
 from __future__ import annotations
 
-import json
 import logging
 
 from sqlalchemy.orm import Session
