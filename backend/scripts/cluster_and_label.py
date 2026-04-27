@@ -18,6 +18,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from app.db.database import SessionLocal
 from app.services.clustering import cluster_articles
 from app.services.labeling import label_articles
+from app.services.summarize import generate_summaries
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
@@ -33,6 +34,10 @@ def run_pipeline():
         logger.info("=== Step 2: Lean Labeling ===")
         label_result = label_articles(db)
         logger.info("Labeling result: %s", label_result)
+
+        logger.info("=== Step 3: Story Summaries ===")
+        summary_result = generate_summaries(db)
+        logger.info("Summary result: %s", summary_result)
 
         logger.info("=== Pipeline complete ===")
     except Exception as e:
