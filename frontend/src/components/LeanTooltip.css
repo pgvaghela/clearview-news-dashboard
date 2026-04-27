@@ -2,55 +2,79 @@
 
 .why-label-btn {
   background: none;
-  border: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
   color: var(--color-accent);
-  font-size: 0.75rem;
+  font-size: 0.67rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   cursor: pointer;
-  padding: 0;
-  text-decoration: underline;
+  padding: 2px 8px;
   white-space: nowrap;
+  transition: border-color 0.13s;
 }
-.why-label-btn:hover { opacity: 0.8; }
+.why-label-btn:hover { border-color: var(--color-accent); }
 
 .lean-tooltip-panel {
   position: absolute;
-  z-index: 200;
-  top: calc(100% + 6px);
+  z-index: 1000;
+  top: calc(100% + 8px);
   left: 0;
-  width: min(280px, calc(100vw - 48px));
-  max-height: min(55vh, 320px);
+  width: min(300px, calc(100vw - 48px));
+  max-height: min(55vh, 340px);
   overflow-y: auto;
   overscroll-behavior: contain;
-  background: var(--color-surface-2);
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  padding: 14px 16px 12px;
-  padding-right: 28px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-  font-size: 0.82rem;
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  padding-right: 32px;
+  box-shadow: var(--shadow-lg);
+  font-size: 0.8rem;
+}
+
+/* Arrow */
+.lean-tooltip-panel::before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: 14px;
+  width: 8px;
+  height: 8px;
+  background: var(--color-surface);
+  border-left: 1px solid var(--color-border);
+  border-top: 1px solid var(--color-border);
+  transform: rotate(45deg);
 }
 
 .tooltip-close {
   position: absolute;
-  top: 8px;
-  right: 10px;
+  top: 8px; right: 9px;
   background: none;
-  border: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xs);
   color: var(--color-text-muted);
   cursor: pointer;
-  font-size: 0.8rem;
+  font-size: 0.68rem;
+  width: 20px; height: 20px;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.12s;
 }
+.tooltip-close:hover { background: var(--color-surface-2); }
 
 .tooltip-row {
   margin-bottom: 4px;
   color: var(--color-text-muted);
+  font-size: 0.76rem;
 }
-.tooltip-label { font-weight: 600; color: var(--color-text); }
+.tooltip-label { font-weight: 700; color: var(--color-text); }
 
 .tooltip-explanation {
   margin-top: 10px;
   color: var(--color-text);
-  line-height: 1.5;
+  line-height: 1.55;
+  font-size: 0.77rem;
   border-top: 1px solid var(--color-border);
-  padding-top: 8px;
+  padding-top: 10px;
 }
