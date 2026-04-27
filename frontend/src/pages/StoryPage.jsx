@@ -16,12 +16,6 @@ const LEAN_COLUMNS = [
   { key: 'right',      label: 'Right',      colorVar: 'var(--color-right)' },
 ]
 
-function scrollToLeanColumn(key) {
-  document.getElementById(`story-lean-${key}`)?.scrollIntoView({
-    behavior: 'smooth',
-    block: 'start',
-  })
-}
 
 function ArticleItem({ article, index }) {
   return (
