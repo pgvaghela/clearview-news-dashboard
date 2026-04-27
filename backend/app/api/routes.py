@@ -79,7 +79,7 @@ def list_stories(
         db.query(Story)
         .filter(Story.is_active)
         .options(joinedload(Story.articles).joinedload(Article.outlet))
-        .order_by(Story.last_updated_at.desc())
+        .order_by(Story.article_count.desc(), Story.last_updated_at.desc())
         .offset((page - 1) * page_size)
         .limit(page_size)
         .all()
