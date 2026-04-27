@@ -115,6 +115,12 @@ Respond with ONLY valid JSON in this exact format:
             messages=[{"role": "user", "content": prompt}],
         )
         raw = message.content[0].text.strip()
+        # Strip markdown code fences if present
+        if raw.startswith("```"):
+            raw = raw.split("```")[1]
+            if raw.startswith("json"):
+                raw = raw[4:]
+        raw = raw.strip()
         parsed = json.loads(raw)
 
         verdict = parsed.get("verdict", "Unverified")
