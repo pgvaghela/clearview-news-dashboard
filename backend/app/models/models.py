@@ -44,6 +44,7 @@ class Article(Base):
     fetched_at = Column(DateTime, default=datetime.utcnow)
     outlet_id = Column(Integer, ForeignKey("outlets.id"), nullable=True)
     outlet_name = Column(String(200), nullable=True)  # raw name from API
+    image_url = Column(String(1000), nullable=True)   # article hero image from NewsAPI
     story_id = Column(Integer, ForeignKey("stories.id"), nullable=True, index=True)
 
     outlet = relationship("Outlet", back_populates="articles")

@@ -1,4 +1,4 @@
-const BASE = '/api/v1'
+const BASE = `${import.meta.env.VITE_API_URL ?? ''}/api/v1`
 
 export async function fetchStories(page = 1, pageSize = 15) {
   const res = await fetch(`${BASE}/stories?page=${page}&page_size=${pageSize}`)

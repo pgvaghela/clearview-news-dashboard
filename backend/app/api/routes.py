@@ -40,6 +40,7 @@ def _article_to_schema(article: Article) -> ArticleSchema:
         description=article.description,
         published_at=article.published_at,
         outlet_name=article.outlet.name if article.outlet else article.outlet_name,
+        image_url=article.image_url,
         lean_display=lean_info["lean_display"],
         why_label=lean_info["why_label"],
         rating_provider="AllSides",
@@ -132,6 +133,7 @@ def list_stories(
             StoryListItem(
                 id=story.id,
                 headline=story.headline,
+                summary=story.summary,
                 first_seen_at=story.first_seen_at,
                 last_updated_at=story.last_updated_at,
                 article_count=story.article_count,

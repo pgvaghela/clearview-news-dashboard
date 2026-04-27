@@ -10,6 +10,8 @@ class Settings(BaseSettings):
     WEBCITE_API_KEY: str = ""
     WEBCITE_SOURCES_LIMIT: int = 10
     API_PREFIX: str = "/api/v1"
+    # Comma-separated origins. In production set to your Render frontend URL.
+    ALLOWED_ORIGINS: str = "http://localhost:5173,http://localhost:3000"
 
     class Config:
         env_file = ".env"

@@ -39,6 +39,22 @@ def _representative_headline(articles: list[Article]) -> str:
     return max(articles, key=lambda a: len(a.title.split())).title
 
 
+def _pick_summary(articles: list[Article]) -> str | None:
+    """Return the longest article description as a story summary, capped at 200 chars."""
+    candidates = [
+        a.description.strip()
+        for a in articles
+        if a.description and len(a.description.strip()) > 30
+    ]
+    if not candidates:
+        return None
+    best = max(candidates, key=len)
+    if len(best) <= 200:
+        return best
+    truncated = best[:200].rsplit(" ", 1)[0]
+    return truncated + "…"
+
+
 def _extract_entities(title: str) -> set[str]:
     """
     Very lightweight named-entity proxy: extract capitalized multi-word runs.
@@ -155,6 +171,7 @@ def cluster_articles(db: Session) -> dict:
         else:
             story = Story(
                 headline=_representative_headline(articles_in_group),
+                summary=_pick_summary(articles_in_group),
                 first_seen_at=min(
                     (a.published_at or a.fetched_at) for a in articles_in_group
                 ),
@@ -184,7 +201,7 @@ def cluster_articles(db: Session) -> dict:
 
 
 def _refresh_story_meta(db: Session, story: Story) -> None:
-    """Update article_count and lean_categories_present on a story."""
+    """Update article_count, lean_categories_present, and summary on a story."""
     articles = db.query(Article).filter(Article.story_id == story.id).all()
     story.article_count = len(articles)
     story.last_updated_at = datetime.utcnow()
@@ -194,3 +211,6 @@ def _refresh_story_meta(db: Session, story: Story) -> None:
         if a.outlet and a.outlet.lean_display:
             leans.add(a.outlet.lean_display.lower())
     story.lean_categories_present = ",".join(sorted(leans)) if leans else None
+
+    if story.summary is None:
+        story.summary = _pick_summary(articles)

@@ -32,6 +32,7 @@ class ArticleSchema(BaseModel):
     description: Optional[str] = None
     published_at: Optional[datetime] = None
     outlet_name: Optional[str] = None
+    image_url: Optional[str] = None
     lean_display: Optional[str] = None   # resolved from outlet
     why_label: Optional[str] = None
     rating_provider: Optional[str] = None
@@ -46,6 +47,7 @@ class ArticleSchema(BaseModel):
 class StoryListItem(BaseModel):
     id: int
     headline: str
+    summary: Optional[str] = None
     first_seen_at: datetime
     last_updated_at: datetime
     article_count: int
