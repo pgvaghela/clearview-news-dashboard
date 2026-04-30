@@ -1,13 +1,13 @@
 # ClearView News Dashboard
 
-> A personal project focused on helping people compare news coverage quickly.
+ > project focused on helping people compare news coverage quickly.
 
-ClearView is an independently built app where I aggregate trending stories across the political spectrum, group coverage by political lean (Left / Lean Left / Center / Lean Right / Right) using AllSides bias ratings, and surface fact-checks and source context for each story. When no professional fact-check exists, Claude AI generates an analysis as a fallback.
+ClearView is an  app where I aggregate trending stories across the political spectrum, group coverage by political lean (Left / Lean Left / Center / Lean Right / Right) using AllSides bias ratings, and surface fact-checks and source context for each story. When no professional fact-check exists, Claude AI generates an analysis as a fallback.
 
 **Live app:** [clearview-news-dashboard.vercel.app](https://clearview-news-dashboard.vercel.app)  
 **API:** [clearview-backend-production.up.railway.app](https://clearview-backend-production.up.railway.app/health)
 
-**Built by:** Priyansh Vaghela (solo project)
+**Built by:** Priyansh Vaghela 
 
 ---
 
